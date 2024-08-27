@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, StatusBar, TextInput, Platform, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, StatusBar, TextInput, Platform, Pressable, ScrollView, ActivityIndicator, Alert, Keyboard } from 'react-native';
 import {MaterialIcons} from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 
 const statusBarHeight = StatusBar.currentHeight
+const KEY_GPT = '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';
 
 export default function App() {
   const [city, setCity] = useState("");
@@ -11,11 +12,54 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [travel, setTravel] = useState("");
 
-  function handleGenerate() {
-    console.log(city)
-    console.log(days)
-  }
-  
+  async function handleGenerate() {
+    if(city === ""){
+      Alert.alert("Atenção", "Preencha o nome da cidade!")
+      return
+    }
+    setTravel("")
+    setLoading(true)
+    Keyboard.dismiss()
+
+    const prompt = `Crie um roteiro para uma viagem de exatos ${days.toFixed(0)} dias na cidade de ${city}, busque por lugares turisticos, lugares mais visitados, seja preciso nos dias de estadia fornecidos e limite o roteiro apenas na cidade fornecida. Forneça apenas em tópicos com nome do local onde ir em cada dia.`
+
+  fetch("https://api.openai.com/v1/chat/completions", {
+    method: "Post",
+    headers: {
+      "Content-Type": "application/json",
+        Authorization: `Bearer ${KEY_GPT}`
+    },
+    body: JSON.stringify({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.2,
+      max_tokens: 256,
+      top_p: 1,
+    })
+  })
+
+  .then(response => response.json())
+  .then((data) => {
+    if(data === true) {
+      console.log(data.choices[0].message.content)
+      setTravel(data.choices[0].message.content)
+    }
+    setTravel(data.error.message)
+    console.log(data)
+  })
+  .catch((error) => {
+    console.log(error);  
+  })
+  .finally(() => {
+    setLoading(false);
+  })
+
+}
 
   return (
     <View style={styles.container}>
@@ -24,7 +68,7 @@ export default function App() {
       <View style={styles.form}>
         <Text style={styles.label}>Cidade destino</Text>
         <TextInput 
-          placeholder="Ex: Sâo Sebastião, SP" 
+          placeholder="Ex: São Sebastião, SP" 
           style={styles.input} 
           value={city}  
           onChangeText={ (text) => setCity(text)}
