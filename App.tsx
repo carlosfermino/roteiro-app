@@ -4,7 +4,7 @@ import {MaterialIcons} from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 
 const statusBarHeight = StatusBar.currentHeight
-const KEY_GPT = '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';
+const KEY_GPT = 'Digite aqui a sua chave APIKey do OpenAI';
 
 export default function App() {
   const [city, setCity] = useState("");
